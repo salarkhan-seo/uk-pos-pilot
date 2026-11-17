@@ -1,0 +1,23 @@
+{
+  "description": "UK POS/EPOS SaaS pilot — modular monolith (TypeScript/NestJS + PostgreSQL + Kysely). Build-02: core backend modules (admin, catalogue, inventory, sales) on PGlite-backed PostgreSQL.",
+  "engines": {
+    "node": ">=20"
+  },
+  "name": "uk-pos-pilot",
+  "packageManager": "pnpm@12.18.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "private": true,
+  "scripts": {
+    "build": "pnpm --filter @uk-pos/shared-kernel build && pnpm --filter @uk-pos/db build && pnpm --filter @uk-pos/api build && pnpm --filter @uk-pos/register-app build && pnpm --filter @uk-pos/admin-web build",
+    "build:api": "pnpm --filter @uk-pos/shared-kernel build && pnpm --filter @uk-pos/db build && pnpm --filter @uk-pos/api build",
+    "staging:check": "bash scripts/staging-check.sh",
+    "start:api": "pnpm --filter @uk-pos/api start",
+    "test": "pnpm --filter @uk-pos/shared-kernel test && pnpm --filter @uk-pos/db test && pnpm --filter @uk-pos/api test && pnpm --filter @uk-pos/register-app test && pnpm --filter @uk-pos/admin-web test",
+    "typecheck": "pnpm --filter @uk-pos/shared-kernel typecheck && pnpm --filter @uk-pos/api typecheck && pnpm --filter @uk-pos/db typecheck && pnpm --filter @uk-pos/register-app typecheck && pnpm --filter @uk-pos/admin-web typecheck"
+  },
+  "version": "0.1.0"
+}

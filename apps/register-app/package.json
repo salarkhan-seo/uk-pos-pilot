@@ -1,0 +1,38 @@
+{
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@stripe/stripe-terminal-react-native": "0.0.1-beta.34",
+    "@uk-pos/db": "workspace:*",
+    "@uk-pos/shared-kernel": "workspace:*",
+    "react": "^19.3.1",
+    "react-native": "^0.88.1"
+  },
+  "description": "Register tablet app for the UK POS pilot (Build-04 Objective 1): offline-first sell screen, Challenge 25 gate, split tender + W-12 unknown-payment screen, till session flow, hardware adapters, and local SQLite storage with delta-sync to the API. Pure/testable TypeScript — no React Native runtime dependency; the view-models are framework-free so they can be bound to a React Native UI later.",
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-test-renderer": "^19.3.1",
+    "kysely": "^0.28.19",
+    "react-test-renderer": "^19.3.1",
+    "typescript": "^5.7.0",
+    "vitest": "^5.1.0"
+  },
+  "exports": {
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "license": "UNLICENSED",
+  "main": "./dist/index.js",
+  "name": "@uk-pos/register-app",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "types": "./dist/index.d.ts",
+  "version": "0.1.0"
+}

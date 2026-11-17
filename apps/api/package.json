@@ -1,0 +1,30 @@
+{
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.2.9",
+    "@uk-pos/db": "workspace:*",
+    "@uk-pos/shared-kernel": "workspace:*",
+    "kysely": "^0.28.19",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "description": "NestJS modular monolith skeleton for the UK POS pilot (Build-01). Module surface only — every service is a stub with no business logic; behaviour is Build-02 work.",
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^5.7.0",
+    "vitest": "^5.1.0"
+  },
+  "license": "UNLICENSED",
+  "main": "dist/main.js",
+  "name": "@uk-pos/api",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "version": "0.1.0"
+}

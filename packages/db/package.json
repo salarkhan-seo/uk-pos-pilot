@@ -1,0 +1,36 @@
+{
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.16",
+    "@uk-pos/shared-kernel": "workspace:*",
+    "kysely": "^0.28.0",
+    "pg": "^8.23.1"
+  },
+  "description": "PostgreSQL DDL migrations, Kysely schema types, tenant-scoped repository base and migration runner for the UK POS pilot. No connection is created here — the driver and connection are Build-02 work.",
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.7"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "license": "UNLICENSED",
+  "main": "./dist/index.js",
+  "name": "@uk-pos/db",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "concurrency:live": "pnpm build && node dist/pg-concurrency-check.js",
+    "concurrency:smoke": "pnpm build && node dist/pg-concurrency-check.js --smoke",
+    "seed:demo": "pnpm build && node dist/seed-demo-cli.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "types": "./dist/index.d.ts",
+  "version": "0.1.0"
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+# Local runtime data — never commit (local SQLite DB, statutory archives)
+data/
+*.sqlite
+# Local environment files — never commit (only .env.staging.example is tracked)
+.env
+.env.staging
+.env*.local

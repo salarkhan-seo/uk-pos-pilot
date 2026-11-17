@@ -1,0 +1,10 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+
+# esbuild's postinstall downloads its platform binary; vitest needs it.
+# @stripe/stripe-terminal-react-native's postinstall only removes a
+# nested @types/minimatch dir (Build-07, Objective 2).
+allowBuilds:
+  esbuild: true
+  "@stripe/stripe-terminal-react-native": true

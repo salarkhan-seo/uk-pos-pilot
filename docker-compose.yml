@@ -1,0 +1,67 @@
+# UK POS/EPOS SaaS — pilot local services (Build-04, Objective 3).
+#
+# FOR THE CONCURRENCY HARNESS AND LOCAL DEVELOPMENT ONLY — NEVER A
+# PRODUCTION DEPLOYMENT. There is no TLS, no backup, no managed
+# credential handling and no hardening here; production stays on a
+# managed PostgreSQL service (see README "Deployment").
+#
+#   docker compose up -d            # start PostgreSQL 16 + Redis 7
+#   DATABASE_URL=postgres://ukpos:ukpos-dev-only@localhost:5433/ukpos_pilot \
+#     pnpm --filter @uk-pos/db concurrency:live
+#   docker compose down             # stop (data survives in the volume)
+#   docker compose down -v          # stop AND delete all local data
+#
+# Non-default host ports are deliberate: 5433 (Postgres) and 6380
+# (Redis) avoid clashing with a locally installed PostgreSQL (5432)
+# or Redis (6379) on the same machine.
+#
+# Redis is included because D-03 names BullMQ/Redis for background
+# jobs. NOTHING in this build connects to it yet — no queue, no
+# worker, no BullMQ dependency. It exists here so the harness and
+# local development have the service ready when the first background
+# job lands; do not treat its presence as a working queue.
+#
+# Credentials below are DEV-ONLY placeholders. Override them via a
+# local .env file (POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB)
+# and never reuse them anywhere else.
+name: uk-pos-pilot
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ukpos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ukpos-dev-only}
+      POSTGRES_DB: ${POSTGRES_DB:-ukpos_pilot}
+    ports:
+      # Host 5433 -> container 5432 (non-default host port; see header).
+      - "5433:5432"
+    volumes:
+      - ukpos_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-ukpos} -d $${POSTGRES_DB:-ukpos_pilot}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+    restart: "no"
+
+  redis:
+    image: redis:7
+    # No persistence configured on purpose: the queue is not used yet
+    # (see header). When BullMQ lands, add appendonly + a volume here.
+    command: ["redis-server", "--appendonly", "no"]
+    ports:
+      # Host 6380 -> container 6379 (non-default host port; see header).
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+    restart: "no"
+
+volumes:
+  ukpos_pgdata:
+    name: uk-pos-pilot-pgdata

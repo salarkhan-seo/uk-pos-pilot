@@ -1,0 +1,113 @@
+# UK POS/EPOS SaaS pilot — Render Blueprint (free staging).
+#
+# Deploys three Node.js Web Services from this repo:
+#   uk-pos-api      — NestJS API  (apps/api/dist/main.js)
+#   uk-pos-register — register tablet UI (apps/register-app/dist/apps/register-app/src/ui/server.js)
+#   uk-pos-admin    — admin web shell (apps/admin-web/dist/ui/server.js)
+#
+# The repo pins pnpm 12.18.0 in package.json ("packageManager") and ships
+# pnpm-lock.yaml, so the build uses `pnpm install --frozen-lockfile`.
+#
+# Regions: Render has no London region; Frankfurt is the closest EU region.
+# The Postgres host (Neon/Supabase) should still be eu-west-2 (London).
+#
+# Secrets marked `sync: false` MUST be filled in by the owner in the
+# Render dashboard after the first deploy — no real secret is in this file.
+#
+# Build-13: the API reads DATABASE_URL (apps/api/src/database/
+# database.module.ts). When it is set, the API connects to the cloud
+# Postgres with a real `pg` pool (sslmode=require honoured — see
+# packages/db/src/pg.ts) and applies any pending migrations on boot.
+# When DATABASE_URL is unset the API falls back to PGlite (in-memory
+# unless PGLITE_DATA_DIR is set), as before. DATABASE_URL is also used
+# by scripts/staging-check.sh and the live G-A-13 check. A malformed
+# or unreachable DATABASE_URL fails the boot loudly — the API never
+# silently falls back to PGlite.
+
+services:
+  - type: web
+    name: uk-pos-api
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: pnpm install --frozen-lockfile && pnpm build:api
+    # apps/api/src/main.ts reads process.env.PORT (default 3000); Render
+    # sets $PORT automatically, so no PORT value is declared here.
+    startCommand: node apps/api/dist/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Staging/demo seed only — never with real customer data (see .env.staging.example).
+      - key: DEMO_SEED_ON_BOOT
+        value: "true"
+      # Cloud Postgres (Neon/Supabase eu-west-2). Placeholder until filled
+      # in the dashboard. Read by the API on boot since Build-13 (see header).
+      - key: DATABASE_URL
+        sync: false
+      # Webhook secret encryption keyring (apps/api/src/modules/integrations/webhook.service.ts):
+      # WEBHOOK_ENCRYPTION_KEYS is a JSON map of key id -> key material;
+      # WEBHOOK_ACTIVE_KEY_ID picks the active key. The single-key
+      # WEBHOOK_ENCRYPTION_KEY is the backward-compatible alternative.
+      - key: WEBHOOK_ENCRYPTION_KEYS
+        sync: false
+      - key: WEBHOOK_ACTIVE_KEY_ID
+        sync: false
+      - key: WEBHOOK_ENCRYPTION_KEY
+        sync: false
+      # Platform-operator keyring for POST /v1/webhooks/re-encrypt-secrets
+      # (apps/api/src/modules/integrations/platform-operator.guard.ts):
+      # PLATFORM_OPERATOR_KEYS is a JSON map of operator id -> secret key;
+      # the single PLATFORM_OPERATOR_KEY is the backward-compatible alternative.
+      - key: PLATFORM_OPERATOR_KEYS
+        sync: false
+      - key: PLATFORM_OPERATOR_KEY
+        sync: false
+
+  - type: web
+    name: uk-pos-register
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    # The register server reads REGISTER_UI_PORT, not PORT
+    # (apps/register-app/src/ui/server.ts:1127, default 3130), so Render's
+    # $PORT is mapped into it in the start command.
+    startCommand: REGISTER_UI_PORT=$PORT node apps/register-app/dist/apps/register-app/src/ui/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # With this flag the register defaults its actor ids + API key to the
+      # demo-seeded tenant (apps/register-app/src/ui/server.ts:314-321).
+      - key: DEMO_SEED_ON_BOOT
+        value: "true"
+      # API base URL the register calls (apps/register-app/src/ui/server.ts:316).
+      - key: REGISTER_API_BASE_URL
+        value: https://uk-pos-api.onrender.com
+      # Optional: encrypts the register's local SQLite file at rest
+      # (apps/register-app/src/storage/sqlite-cipher.ts). When unset the
+      # file is stored unencrypted and the page shows a warning banner.
+      # The default storage is in-memory (no REGISTER_SQLITE_PATH set),
+      # so the offline queue does not survive a restart on free Render.
+      - key: REGISTER_APP_DEVICE_SECRET
+        sync: false
+
+  - type: web
+    name: uk-pos-admin
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    # The admin server reads ADMIN_WEB_PORT, not PORT
+    # (apps/admin-web/src/ui/server.ts:57-64, default 3131), so Render's
+    # $PORT is mapped into it in the start command.
+    startCommand: ADMIN_WEB_PORT=$PORT node apps/admin-web/dist/ui/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # With this flag the admin shell defaults to the demo-seeded API,
+      # demo key and demo owner actor (apps/admin-web/src/ui/server.ts:74-96).
+      - key: DEMO_SEED_ON_BOOT
+        value: "true"
+      # API base URL the admin shell calls (apps/admin-web/src/ui/server.ts:75).
+      - key: ADMIN_API_BASE_URL
+        value: https://uk-pos-api.onrender.com
