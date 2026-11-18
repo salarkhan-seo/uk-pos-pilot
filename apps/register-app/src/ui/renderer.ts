@@ -459,29 +459,154 @@ export function renderHardwarePanel(state: RegisterUiState): string {
 // -- Full page ------------------------------------------------------------------
 
 const CSS = `
-body{font-family:system-ui,sans-serif;margin:0;padding:16px;background:#f4f4f2;color:#111}
-h1{font-size:22px}h2{font-size:18px;margin-top:28px}h3{font-size:16px}
-button{font-size:18px;padding:12px 18px;margin:4px;min-height:48px;touch-action:manipulation}
-button:disabled{opacity:.45;cursor:not-allowed}
-input,select{font-size:18px;padding:10px;margin:4px}
-.banner{padding:12px;margin:12px 0;border-radius:6px;font-weight:600}
-.online-banner{background:#d7f0dd}.offline-banner{background:#fde3a7}
-.modal{border:2px solid #111;border-radius:8px;padding:16px;margin:16px 0;background:#fff}
-.modal.blocking{border-color:#b00020;background:#fff0f0}
+/* Register tablet UI — modern clean till (CSS-only redesign).
+ * Design tokens: one accent (retail blue), calm light theme.
+ * Green = live/online, amber = offline — banner semantics preserved.
+ * System font stack only; zero external resources (offline-first). */
+:root{
+  --accent:#1d4ed8;
+  --accent-dark:#1e40af;
+  --accent-soft:#e9eefc;
+  --accent-border:#c3d2f7;
+  --bg:#f4f6f8;
+  --surface:#ffffff;
+  --border:#dfe3e8;
+  --border-strong:#c6ccd4;
+  --text:#15181d;
+  --muted:#5b6470;
+  --green-bg:#dcf2e3; --green-text:#14532d; --green-border:#7cc496;
+  --amber-bg:#fdf0c8; --amber-text:#5c4300; --amber-border:#e0bd4e;
+  --danger:#b00020; --danger-bg:#fff2f2;
+  --radius:12px;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.05);
+}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0 auto;max-width:1240px;padding:24px;background:var(--bg);color:var(--text);font-size:16px;line-height:1.5}
+h1{font-size:26px;line-height:1.25;margin:0 0 16px;font-weight:700;letter-spacing:-.01em}
+h2{font-size:20px;line-height:1.3;margin:0 0 16px;font-weight:700;letter-spacing:-.01em}
+h3{font-size:17px;line-height:1.35;margin:0 0 10px;font-weight:650}
+h4{font-size:16px;margin:0 0 8px;font-weight:650}
+p{margin:0 0 12px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#eef1f4;padding:2px 6px;border-radius:6px;font-size:.9em}
+main>section,.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin:28px 0;box-shadow:var(--shadow)}
+header{margin-bottom:8px}
+footer{border-top:1px solid var(--border);margin-top:32px;padding-top:16px;color:var(--muted);font-size:14px}
+footer p{margin:0}
+
+/* Buttons, inputs, selects — large touch targets for tablet use. */
+button{font-family:inherit;font-size:17px;font-weight:600;line-height:1.3;padding:14px 20px;margin:4px;min-height:56px;border-radius:10px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);cursor:pointer;touch-action:manipulation}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:active:not(:disabled){background:#f0f3f8}
+button:disabled{opacity:.5;cursor:not-allowed}
+button[type="submit"]{background:var(--accent);border-color:var(--accent);color:#fff}
+button[type="submit"]:hover:not(:disabled){background:var(--accent-dark);border-color:var(--accent-dark)}
+button[type="submit"]:active:not(:disabled){background:var(--accent-dark)}
+input,select{font-family:inherit;font-size:17px;line-height:1.3;padding:12px 14px;margin:4px;min-height:56px;border:1px solid var(--border-strong);border-radius:10px;background:var(--surface);color:var(--text)}
+input:focus,select:focus,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+input:focus,select:focus{border-color:var(--accent)}
+label{font-weight:600;font-size:15px}
+::placeholder{color:#8a94a1}
+
+/* Banners — green live, amber offline (semantics unchanged). */
+.banner{padding:14px 16px;margin:12px 0;border-radius:10px;border:1px solid var(--border);border-left:6px solid var(--muted);background:#f0f2f5;color:var(--text);font-weight:600;line-height:1.45}
+.online-banner{background:var(--green-bg);border-color:var(--green-border);border-left-color:#1e7a3c;color:var(--green-text)}
+.offline-banner{background:var(--amber-bg);border-color:var(--amber-border);border-left-color:#b8860b;color:var(--amber-text)}
+#offline-banners .banner{margin:8px 0}
+
+/* Modals. */
+.modal{max-width:760px}
+.modal.blocking{border:2px solid var(--danger);background:var(--danger-bg)}
+.modal p{line-height:1.55}
 .w12-message{font-weight:700;font-size:18px}
-table.basket{border-collapse:collapse;width:100%;background:#fff}
-table.basket th,table.basket td{border:1px solid #ccc;padding:8px;text-align:left}
-tr.line-breakdown td{font-size:13px;color:#444;background:#fafafa}
-.quick-keys{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
-.quick-key{min-width:120px}
-.receipt{width:320px;max-width:100%;background:#fff;border:1px solid #999;padding:12px;font-family:monospace;font-size:13px;white-space:pre-wrap}
-.customer-display{background:#111;color:#0f0;padding:12px;font-family:monospace;font-size:15px;white-space:pre-wrap}
+.w12-actions{display:grid;gap:16px;margin-top:16px}
+.w12-actions form{border-top:1px solid var(--border);padding-top:16px}
+.w12-actions label{display:block;margin-bottom:6px}
+.w12-actions input,.w12-actions select{display:block;width:100%;max-width:420px}
+
+/* Sell screen. */
+.barcode-form,.search-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin-bottom:16px}
+.barcode-form label,.search-form label{display:block;margin-bottom:6px}
+.barcode-form input,.search-form input{flex:1;min-width:220px;margin:0}
+.barcode-form button,.search-form button{margin:0}
+#search-results{margin:0 0 16px}
+#search-results p{margin:0}
+#search-results .inline-form button{margin:4px 4px 4px 0}
+.quick-keys{margin:4px 0 20px}
+.quick-keys form{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:0}
+.quick-key{min-width:0;min-height:88px;margin:0;background:var(--accent-soft);border:1px solid var(--accent-border);color:var(--accent-dark);font-size:18px;line-height:1.3;padding:16px 12px}
+.quick-key small{display:block;margin-top:6px;font-size:15px;font-weight:600;color:rgba(255,255,255,.85)}
+.quick-key:hover:not(:disabled){background:var(--accent-dark);border-color:var(--accent-dark)}
+table.basket{border-collapse:collapse;width:100%;background:var(--surface);font-size:16px}
+table.basket th,table.basket td{border-bottom:1px solid var(--border);padding:12px 10px;text-align:left;vertical-align:top}
+table.basket th{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:#f8fafc;padding:10px}
+table.basket th:nth-child(n+2),table.basket td:nth-child(n+2){text-align:right}
+table.basket th:first-child,table.basket td:first-child{text-align:left}
+table.basket tbody tr:hover{background:#fafbfc}
+table.basket td small{color:var(--muted);font-size:13px}
+table.basket tfoot td{border-bottom:none;border-top:2px solid var(--text);padding:16px 10px;font-size:19px}
+table.basket tfoot td:first-child{text-align:right;font-weight:600}
+tr.line-breakdown td{font-size:13px;color:var(--muted);background:#f8fafc;padding:8px 10px 12px;text-align:left}
+.basket-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:20px 0}
+.basket-actions .inline-form button{margin:0}
+.parked-badge{display:inline-block;background:#eef1f4;border:1px solid var(--border);border-radius:999px;padding:10px 16px;font-weight:600;font-size:15px}
+#parked-baskets,#last-sale,#open-live-order,#pending-card-attempts{margin:20px 0 0}
+#parked-baskets h3,#last-sale h3,#open-live-order h3,#pending-card-attempts h3{margin-bottom:8px}
+#last-sale ul,#split-tender-modal ul{margin:0 0 12px;padding-left:22px}
+#last-sale li,#split-tender-modal li{margin-bottom:4px}
+#pending-card-attempts form{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:8px 0}
+#pending-card-attempts form>*{margin:0}
+.sync-controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border-top:1px solid var(--border);margin-top:24px;padding-top:20px}
+.sync-controls .inline-form button{margin:0}
+.sync-controls .hint{margin:0;flex:1 1 100%}
+.tender-buttons{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:20px}
+.tender-btn{min-height:64px;margin:0;font-size:18px}
+#sell-screen>.hint{margin:16px 0 0}
+
+/* Two-column till on wide tablets/desktops: input + quick keys left, basket right. */
+@media (min-width:960px){
+  #sell-screen{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);column-gap:28px}
+  #sell-screen>h2{grid-column:1/-1}
+  .barcode-form,.search-form,#search-results,.quick-keys{grid-column:1}
+  table.basket,.basket-actions,#parked-baskets,#last-sale,#open-live-order,#pending-card-attempts{grid-column:2}
+  .sync-controls,.tender-buttons,#sell-screen>.hint{grid-column:1/-1}
+}
+
+/* PIN pad + manager PIN modal. */
+.pin-form{max-width:440px}
+.pin-form label{display:block;margin:12px 0 6px}
+.pin-form input{display:block;width:100%;margin:0 0 4px}
+.pin-form button[type="submit"]{width:100%;margin-top:16px}
+.pin-pad{display:grid;grid-template-columns:repeat(3,76px);gap:10px;margin:16px 0}
+.pin-key{min-width:76px;min-height:64px;margin:0;font-size:22px;border-radius:12px}
+
+/* Till session forms. */
+.till-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin:16px 0}
+.till-form label{display:block;margin-bottom:6px}
+.till-form input{margin:0;width:200px}
+.till-form button{margin:0}
+#z-report-view{margin-top:16px}
+#z-report-view p{margin:0}
+
+/* Hardware simulator. */
 .hardware-grid{display:flex;flex-wrap:wrap;gap:24px}
-.pin-pad{display:grid;grid-template-columns:repeat(3,64px);gap:6px;margin:8px 0}
-.pin-key{min-width:64px}
+.hardware-grid>div{flex:1 1 320px;min-width:0}
+.receipt{width:340px;max-width:100%;background:#fff;border:1px solid var(--border-strong);border-radius:10px;padding:16px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.45;white-space:pre-wrap;box-shadow:var(--shadow)}
+.customer-display{background:#101410;color:#2ee66b;border-radius:10px;padding:16px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;line-height:1.5;white-space:pre-wrap;box-shadow:var(--shadow)}
 .inline-form{display:inline}
-.demo-label{background:#eef;border:1px solid #99c;padding:8px;margin:12px 0}
-.hint{color:#444;font-size:14px}
+.demo-label{background:var(--accent-soft);border:1px solid var(--accent-border);border-left:6px solid var(--accent);border-radius:10px;padding:12px 16px;margin:12px 0;color:var(--accent-dark)}
+.hint{color:var(--muted);font-size:14px;line-height:1.5}
+#split-tender-modal .tender-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin:16px 0}
+#split-tender-modal .tender-form label{display:block;margin-bottom:6px}
+#split-tender-modal .tender-form input,#split-tender-modal .tender-form select{margin:0}
+#split-tender-modal .tender-form button{margin:0}
+#split-tender-countdown{font-weight:700;font-size:18px}
+@media (max-width:640px){
+  body{padding:16px}
+  main>section,.modal{padding:18px}
+  .quick-keys form{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .tender-buttons{grid-template-columns:repeat(2,1fr)}
+  table.basket{font-size:15px}
+}
 `;
 
 export function renderRegisterPage(state: RegisterUiState): string {

@@ -27,19 +27,36 @@ import { DLQ_RETENTION_DAYS } from '../finance/webhooks';
 import { settlementSummary } from '../finance/reporting';
 import type { WebhookDeliveryView } from '../api/types';
 
+/**
+ * Back-office shell styles — light theme, CSS only, no external resources.
+ *
+ * Design tokens share the register app's visual family: warm-neutral page
+ * background (#f4f4f2), white cards, system font stack, one accent
+ * (deep green), green = live/ok, amber = demo/stale/warning, red = error.
+ * Layout is pure CSS over the existing header/nav/main/footer markup:
+ * the nav becomes a sticky sidebar on wide screens and collapses back
+ * to a horizontal bar under 860px. No visible text, ids, routes or
+ * behaviour are changed by these styles.
+ */
 export const SHELL_CSS = [
-  'body{font-family:system-ui,sans-serif;margin:0;background:#0f1f2e;color:#e8f0f2}',
-  'header{background:#12324a;padding:16px 24px}header h1{margin:0;font-size:20px}header p{margin:4px 0 0;color:#9fc3d4}',
-  'nav{background:#0b1a26;padding:10px 24px}nav a{color:#7fd1c0;margin-right:18px;text-decoration:none}nav a.active{color:#fff;font-weight:700;text-decoration:underline}',
-  'main{padding:24px;max-width:1100px}section{background:#16324a;border-radius:8px;padding:16px 20px;margin-bottom:20px}h2{margin-top:0;color:#7fd1c0}',
-  'table{border-collapse:collapse;width:100%}th,td{border:1px solid #2a4a63;padding:6px 8px;text-align:left;font-size:14px}th{background:#0f2a3d}',
-  'input,select{padding:6px 8px;border-radius:4px;border:1px solid #2a4a63;background:#0b1a26;color:#e8f0f2}',
-  'button{padding:8px 14px;border-radius:4px;border:0;background:#2a9d8f;color:#fff;cursor:pointer;font-weight:600}button.danger{background:#b3261e}button:disabled{background:#555;cursor:not-allowed}',
-  '.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;font-weight:700}.badge.demo{background:#8a6d00;color:#fff}.badge.live{background:#1b6e3f;color:#fff}.badge.blocked{background:#b3261e;color:#fff}.badge.ok{background:#1b6e3f;color:#fff}.badge.stale{background:#8a6d00;color:#fff}',
-  '.error{background:#4a1414;border:1px solid #b3261e;border-radius:6px;padding:10px 14px;margin-bottom:12px}',
-  '.note{background:#12324a;border-left:4px solid #7fd1c0;padding:10px 14px;margin-bottom:12px;font-size:14px}',
-  '.blockers{background:#4a1414;border:1px solid #b3261e;border-radius:6px;padding:12px 16px;margin-bottom:12px}code{background:#0b1a26;padding:1px 5px;border-radius:3px}',
-  'footer{padding:16px 24px;color:#9fc3d4;font-size:13px}',
+  ':root{--bg:#f4f4f2;--surface:#ffffff;--surface-muted:#f8f9f7;--border:#e3e6e2;--border-strong:#cfd5cf;--text:#171a18;--muted:#5c665f;--accent:#177245;--accent-hover:#125c38;--accent-soft:#d7f0dd;--accent-soft-border:#b3dfc0;--accent-text:#14532d;--amber-bg:#fdf3d0;--amber-border:#f0dd9a;--amber-text:#6d5200;--red:#b3261e;--red-hover:#8f1d17;--red-bg:#fdecea;--red-border:#f3c1bc;--red-text:#7f1d17;--radius:12px;--radius-sm:6px;--shadow:0 1px 2px rgba(23,26,24,.05),0 1px 4px rgba(23,26,24,.04);--font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}',
+  '*{box-sizing:border-box}',
+  'body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text);font-size:15px;line-height:1.55;display:grid;grid-template-columns:236px minmax(0,1fr);grid-template-areas:"header header" "nav main" "footer footer";min-height:100vh}',
+  'a{color:var(--accent)}a:hover{color:var(--accent-hover)}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}',
+  'header{grid-area:header;background:var(--surface);border-bottom:1px solid var(--border);padding:18px 28px}header h1{margin:0;font-size:20px;line-height:1.25;font-weight:700;letter-spacing:-.01em}header p{margin:4px 0 0;color:var(--muted);font-size:14px}',
+  'nav{grid-area:nav;background:var(--surface);border-right:1px solid var(--border);padding:16px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto}nav a{display:block;padding:9px 12px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14.5px;font-weight:500}nav a:hover{background:var(--surface-muted)}nav a.active{background:var(--accent-soft);color:var(--accent-text);font-weight:700;box-shadow:inset 3px 0 0 var(--accent)}',
+  'main{grid-area:main;padding:28px 32px 48px;min-width:0;max-width:1200px;width:100%}main>.badge{margin-bottom:18px}',
+  'section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 24px;margin-bottom:20px}section>*:last-child{margin-bottom:0}h2{margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--border);font-size:17px;line-height:1.3;font-weight:700;letter-spacing:-.01em}section h2 a{color:var(--text);text-decoration:none;display:block}section h2 a:hover{color:var(--accent)}',
+  'table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border);overflow-wrap:break-word}th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;border-bottom:2px solid var(--border-strong)}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:var(--surface-muted)}',
+  'form p{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:14px 0 0}label{display:inline-flex;align-items:center;gap:6px}',
+  'input,select{font:inherit;font-size:14px;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:#fff;color:var(--text);max-width:100%}input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;padding:0}input[type="number"]{width:96px}',
+  'button{font:inherit;font-size:14px;padding:9px 16px;border-radius:var(--radius-sm);border:0;background:var(--accent);color:#fff;cursor:pointer;font-weight:600}button:hover{background:var(--accent-hover)}button.danger{background:var(--red)}button.danger:hover{background:var(--red-hover)}button:disabled{background:#c7ccc8;color:#fff;cursor:not-allowed}td button{padding:6px 12px;font-size:13px}',
+  '.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.02em;border:1px solid transparent}.badge.demo{background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber-border)}.badge.live{background:var(--accent-soft);color:var(--accent-text);border-color:var(--accent-soft-border)}.badge.blocked{background:var(--red-bg);color:var(--red-text);border-color:var(--red-border)}.badge.ok{background:var(--accent-soft);color:var(--accent-text);border-color:var(--accent-soft-border)}.badge.stale{background:var(--amber-bg);color:var(--amber-text);border-color:var(--amber-border)}',
+  '.error{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red-text);border-radius:8px;padding:12px 16px;margin-bottom:16px}',
+  '.note{background:#eef6f0;border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:12px;font-size:14px}',
+  '.blockers{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red-text);border-radius:8px;padding:14px 18px;margin-bottom:16px}.blockers ul{margin:8px 0 4px;padding-left:20px}code{font-family:var(--mono);font-size:13px;background:#eef1ee;border:1px solid var(--border);padding:1px 6px;border-radius:4px}',
+  'footer{grid-area:footer;background:var(--surface);border-top:1px solid var(--border);padding:18px 28px;color:var(--muted);font-size:13px}',
+  '@media (max-width:860px){body{display:block}header{padding:16px 20px}nav{position:static;display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;padding:10px 16px;border-right:0;border-bottom:1px solid var(--border);max-height:none;overflow:visible}nav a{padding:7px 10px}nav a.active{box-shadow:none}main{padding:20px 16px 32px;max-width:none}section{padding:16px}table{font-size:13px}th,td{padding:8px}footer{padding:16px 20px}}',
 ].join('\n');
 
 function dataSourceBadge(source: DataSource): string {
@@ -86,7 +103,7 @@ export function renderPage(title: string, active: DashboardViewName | 'home', in
 
 export function renderHome(): string {
   const cards = DASHBOARD_VIEWS.map(
-    (v) => `<section><h2><a href="${v.path}" style="color:#7fd1c0">${escapeHtml(v.label)}</a></h2></section>`,
+    (v) => `<section><h2><a href="${v.path}">${escapeHtml(v.label)}</a></h2></section>`,
   ).join('');
   return cards;
 }
